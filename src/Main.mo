@@ -5,9 +5,9 @@ import Debug "mo:base/Debug";
 import Nat "mo:base/Nat";
 import Buffer "mo:base/Buffer";
 import CONST "CONST";
-
+//---------------- Tipos de mensaje --------------------------------
 let CONNECT : Nat8 = 1; //0011 Este mensaje es enviado por un cliente para establecer una conexión con el broker MQTT.
-                        //Contiene información de identificación del cliente, como el identificador de cliente y las credenciales.
+                        //Contiene información de identificación del cliene, como el identificador de cliente y las credenciales.
 let CONNACK : Nat8 = 2; //0010 Este mensaje es enviado por el broker en respuesta al mensaje CONNECT. Indica si la conexión se ha
                         //establecido correctamente y puede contener información adicional, como el resultado de autenticación.
 let PUBLISH : Nat8 = 3; //0011 Este mensaje es utilizado por un cliente para publicar un mensaje en un tópico. Contiene el tópico,
@@ -25,6 +25,7 @@ let SUBSCRIBE: Nat8 = 8;//1000 Este mensaje es utilizado por un cliente para sus
 let SUBACK : Nat8 = 9;  //1001 Este mensaje es enviado por el broker en respuesta a un mensaje SUBSCRIBE. Indica el resultado
                         //de la suscripción y puede contener información adicional, como los niveles de QoS aceptados.
 let UNSUBSCRIBE: Nat8 = 10; //1010
+//------------------------------------------------------------------
 
 actor MQTTBroker {
     type Topic = Types.Topic;
@@ -47,33 +48,20 @@ actor MQTTBroker {
             };
         };
     };
-
     func deliveryMsj(s : Subscriptor, m : msj) : async () {
-
-        let msjToText : ?Text = Text.decodeUtf8(m);
+        let msjToText : ?Text = Text.decodeUtf8(m); //Revisar codificacion
         let mensaje = switch (msjToText) {
             case (null) "Null";
             case (?msj) msj;
         };
-        Debug.print("enviando: " # mensaje # " a " # Nat.toText(s));
-
+        Debug.print("enviando: " # mensaje # " a " # Nat.toText(s)); //TODO
     };
-
     public func publish(m : msj) : async () {
         let topic = await Types.getTopic(m);
         let listeners : ?Subs = subsByTopic.get(topic);
         switch (listeners) {
-            case (null) {
-                return ();
-            };
-            case (?subs) {
-                for (s in subs.vals()) {
-                    await deliveryMsj(s, m);
-                };
-                return ();
-            };
+            case (null) return ();
+            case (?subs) for (s in subs.vals()) await deliveryMsj(s, m);
         };
-
     };
-
 };
