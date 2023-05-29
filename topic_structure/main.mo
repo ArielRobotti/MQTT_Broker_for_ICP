@@ -30,14 +30,9 @@ actor MQTT_Broker {
             if (Buffer.contains<Level>(currentLevel.subLevel, tempLevel, Level.equal)) {
                 //si el mivel ya existe se continuará subiendo de nivel
             } else {
-
                 // Si el nivel no existe se creara dicho nivel dentro de currentLevel.subLevel con sus correspondiente
                 // rama de Levels hasta el ultimo Level, el cual incluirá en su Buffer topics, el topic
-
             };
-
         };
-
     };
-
 };
