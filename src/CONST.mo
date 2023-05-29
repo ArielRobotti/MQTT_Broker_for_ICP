@@ -1,6 +1,6 @@
 
-module{
-    public func CONNECT(): async Nat8 {1};  //0011 Este mensaje es enviado por un cliente para establecer una conexión con el broker MQTT.
+module {
+    let CONNECT: Nat8 = 1;  //0011 Este mensaje es enviado por un cliente para establecer una conexión con el broker MQTT.
                             // Contiene información de identificación del cliente, como el identificador de cliente y las credenciales.
     let CONNACK: Nat8 = 2;  //0010 Este mensaje es enviado por el broker en respuesta al mensaje CONNECT. Indica si la conexión se ha
                             //establecido correctamente y puede contener información adicional, como el resultado de autenticación.
