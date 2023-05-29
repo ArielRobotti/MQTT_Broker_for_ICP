@@ -40,8 +40,5 @@ module {
     public func mkTopic(super: Level, t: Topic): async (){
         super.topics.add(t);
     };
-    public func equal(a: Level , b: Level): Bool{
-        return a.name == b.name;
-    };
-
+    public func equal(a: Level , b: Level): Bool {a.name == b.name};  
 };
