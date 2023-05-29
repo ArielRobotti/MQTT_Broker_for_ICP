@@ -5,6 +5,7 @@ import Debug "mo:base/Debug";
 import Nat "mo:base/Nat";
 import Buffer "mo:base/Buffer";
 import CONST "CONST";
+import Blob "mo:base/Blob";
 //---------------- Tipos de mensaje --------------------------------
 let CONNECT : Nat8 = 1; //0011 Este mensaje es enviado por un cliente para establecer una conexión con el broker MQTT.
 //Contiene información de identificación del cliene, como el identificador de cliente y las credenciales.
@@ -35,7 +36,38 @@ actor MQTTBroker {
 
     var subsByTopic = HashMap.HashMap<Topic, Subs>(0, Topic.topicEqual, Topic.topicHash);
 
-    public func suscribeTo(t : Topic, s : Subscriptor) : async () {
+    
+
+    func deliveryMsj(s : Subscriptor, m : msj): () {
+        let msjToText : ?Text = Text.decodeUtf8(m); //Revisar codificacion
+        let mensaje = switch (msjToText) {
+            case (null) "Null";
+            case (?msj) msj;
+        };
+        Debug.print("enviando: " # mensaje # " a " # Nat.toText(s)); //TODO
+    };
+    
+    func connect(m: msj): async ?msj{
+        //TODO
+        return null;
+    };
+
+    func publish(m : msj): async ?msj{
+        let topic = await Topic.getTopic(m);
+        let listeners : ?Subs = subsByTopic.get(topic);
+        switch (listeners) {
+            case (null) return null;
+            case (?subs) for (s in subs.vals()) deliveryMsj(s, m);
+        };
+        return null;
+    };
+    
+    func pubrel(m: msj): async ?msj{
+        //TODO
+        return null;
+    };
+
+    func suscribe(t : Topic, s : Subscriptor) : ?msj{
         let value : ?Subs = subsByTopic.get(t);
         switch (value) {
             case (null) {
@@ -47,21 +79,23 @@ actor MQTTBroker {
                 value.add(s);
             };
         };
+        return null;
     };
-    func deliveryMsj(s : Subscriptor, m : msj) : async () {
-        let msjToText : ?Text = Text.decodeUtf8(m); //Revisar codificacion
-        let mensaje = switch (msjToText) {
-            case (null) "Null";
-            case (?msj) msj;
-        };
-        Debug.print("enviando: " # mensaje # " a " # Nat.toText(s)); //TODO
+
+    func unsubscribe(m: msj): ?msj{
+        //TODO
+        return null;
     };
-    public func publish(m : msj) : async () {
-        let topic = await Topic.getTopic(m);
-        let listeners : ?Subs = subsByTopic.get(topic);
-        switch (listeners) {
-            case (null) return ();
-            case (?subs) for (s in subs.vals()) await deliveryMsj(s, m);
-        };
+    
+    public func sendMsj(m: msj): async ?msj{
+        let arrayMsj = Blob.toArray(m);
+        let msjType = arrayMsj[0];
+
+        if (msjType == CONNECT) {null/*TODO*/}
+        else if(msjType == PUBLISH) {await publish(m)}
+        else if(msjType == PUBREL) {null/*TODO*/}
+        else if(msjType == SUBSCRIBE) {null/*TODO*/}
+        else if(msjType == UNSUBSCRIBE) {null/*TODO*/}
+        else null;
     };
 };
