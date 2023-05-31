@@ -4,8 +4,10 @@ import Text "mo:base/Text";
 import Debug "mo:base/Debug";
 import Nat "mo:base/Nat";
 import Buffer "mo:base/Buffer";
-import CONST "CONST";
 import Blob "mo:base/Blob";
+import Ascii "Ascii";
+import Subscribe "Subscribe";
+
 //---------------- Tipos de mensaje ---------------------------------
 let CONNECT : Nat8 = 1; //0011 Este mensaje es enviado por un cliente para establecer una conexión con el broker MQTT.
 //Contiene información de identificación del cliene, como el identificador de cliente y las credenciales.
@@ -26,6 +28,8 @@ let SUBSCRIBE : Nat8 = 8; //1000 Este mensaje es utilizado por un cliente para s
 let SUBACK : Nat8 = 9; //1001 Este mensaje es enviado por el broker en respuesta a un mensaje SUBSCRIBE. Indica el resultado
 //de la suscripción y puede contener información adicional, como los niveles de QoS aceptados.
 let UNSUBSCRIBE : Nat8 = 10; //1010
+//--------------------- Caracteres ASCII desde el 32 ------------------------------
+//let decodeToAscii: [Char] = [' ', '!', '\"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '¡', '¢', '£', '¤', '¥', '¦', '§', '¨', '©', 'ª', '«', '¬', ' ', ' ', ' ', '°', '±', '²', '³', '´', 'µ', '¶', '·', '¸', '¹', 'º', '»', '¼', '½', '¾', '¿', 'À', 'Á', 'Â', 'Ã', 'Ä', 'Å', 'Æ', 'Ç', 'È', 'É', 'Ê', 'Ë', 'Ì', 'Í', 'Î', 'Ï', 'Ð', 'Ñ', 'Ò', 'Ó', 'Ô', 'Õ', 'Ö', '×', 'Ø', 'Ù', 'Ú', 'Û', 'Ü', 'Ý', 'Þ', 'ß', 'à', 'á', 'â', 'ã', 'ä', 'å', 'æ', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ð', 'ñ', 'ò', 'ó', 'ô', 'õ', 'ö', '÷', 'ø', 'ù', 'ú', 'û', 'ü', 'ý', 'þ', 'ÿ'];
 /*
 Nota: Tanto la identidad de los suscriptores como la de los publicadores deberá estar determinada por sus
 respectivos Principal ID, de manera tal que para poder suscribirse a un topic, el interesado deberá conocer el
@@ -39,18 +43,20 @@ específica sino que la propia emisión del mensaje desencadenará un mensaje de
 actor MQTTBroker {
     type Topic = Topic.Topic;
     type msj = Blob;
-    type Subscriptor = Nat;
+    type Subscriptor = Principal;
     type Subs = Buffer.Buffer<Subscriptor>;
 
     var subsByTopic = HashMap.HashMap<Topic, Subs>(0, Topic.topicEqual, Topic.topicHash);
-
-    func deliveryMsj(s : Subscriptor, m : msj) : () {
-        let msjToText : ?Text = Text.decodeUtf8(m); //Revisar codificacion
-        let mensaje = switch (msjToText) {
-            case (null) "Null";
-            case (?msj) msj;
-        };
-        Debug.print("enviando: " # mensaje # " a " # Nat.toText(s)); //TODO
+    
+    func deliveryMsj(s : Subscriptor, m : msj) :  ?msj{
+        let listener : ?Subscribe = await Actor.fromPrincipal<Subscribe>(s);
+        switch listener{
+            case(null) null;
+            case(?l){
+               let recibe: ?msj = await l.getMsj(m);
+               
+            } 
+        }
     };
 
     func connect(m : msj) : async ?msj {
